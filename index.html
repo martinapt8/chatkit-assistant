@@ -131,9 +131,15 @@
 
         /* ChatKit custom styling */
         openai-chatkit {
-            display: block;
+            display: block !important;
+            width: 100% !important;
+            min-height: 600px !important;
+            height: 600px !important;
+        }
+
+        #chat-wrapper {
             width: 100%;
-            min-height: 500px;
+            min-height: 600px;
         }
     </style>
 </head>
@@ -201,7 +207,11 @@
                 console.log('[ChatKit] Client secret received:', clientSecret.substring(0, 10) + '...');
 
                 // Hide loading
-                document.getElementById('loading').style.display = 'none';
+                const loadingEl = document.getElementById('loading');
+                if (loadingEl) {
+                    loadingEl.style.display = 'none';
+                    console.log('[ChatKit] Loading indicator hidden');
+                }
 
                 // Create ChatKit chat element
                 const chatWrapper = document.getElementById('chat-wrapper');
@@ -212,6 +222,18 @@
                 chatWrapper.appendChild(chatElement);
 
                 console.log('[ChatKit] Chat component initialized');
+                console.log('[ChatKit] Chat element:', chatElement);
+
+                // Debug: check if element is in DOM
+                setTimeout(() => {
+                    const mounted = document.getElementById('chat');
+                    console.log('[ChatKit] Element in DOM:', mounted);
+                    console.log('[ChatKit] Element dimensions:', {
+                        width: mounted?.offsetWidth,
+                        height: mounted?.offsetHeight,
+                        display: window.getComputedStyle(mounted || {}).display
+                    });
+                }, 1000);
 
             } catch (error) {
                 console.error('[ChatKit] Initialization error:', error);
