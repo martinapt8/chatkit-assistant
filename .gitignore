@@ -1,6 +1,10 @@
 # macOS
 .DS_Store
 
+# Environment variables
+.env
+.env.local
+
 # Google Apps Script files (deploy separately)
 *.gs
 
@@ -12,3 +16,6 @@ ChatKitDocs
 # Legacy files (not needed for GitHub Pages)
 A8ProjectSearch.html
 styles.html
+
+# Vercel
+.vercel
