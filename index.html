@@ -217,7 +217,11 @@
                 const chatWrapper = document.getElementById('chat-wrapper');
                 const chatElement = document.createElement('openai-chatkit');
                 chatElement.id = 'chat';
+
+                // Try both attribute formats that ChatKit might expect
                 chatElement.setAttribute('client-secret', clientSecret);
+                chatElement.setAttribute('clientSecret', clientSecret);
+                chatElement.clientSecret = clientSecret; // Also set as property
 
                 chatWrapper.appendChild(chatElement);
 
