@@ -8,9 +8,7 @@
 # Google Apps Script files (deploy separately)
 *.gs
 
-# Documentation (internal only)
-CHATKIT_LESSONS_LEARNED.md
-DEPLOYMENT_GUIDE.md
+# Documentation (legacy - kept for reference)
 ChatKitDocs
 
 # Legacy files (not needed for GitHub Pages)
