@@ -174,8 +174,13 @@
     </div>
 
     <script>
-        // Configuration - UPDATE THIS URL to your deployed Google Apps Script web app URL
+        // Configuration
         const GAS_BACKEND_URL = 'https://chatkit-assistant.vercel.app/api/session';
+
+        // ADD YOUR PUBLIC KEY FROM OPENAI DASHBOARD HERE
+        // Get this from: https://platform.openai.com/settings/organization/chatkit
+        // After adding your domain (martinapt8.github.io), OpenAI will give you a public key
+        const CHATKIT_PUBLIC_KEY = 'domain_pk_68f3015dbb588190990ca2923ee7165504beacee6aa524a4'; // Replace with actual key from OpenAI dashboard
 
         // Initialize ChatKit
         async function initializeChatKit() {
@@ -218,10 +223,20 @@
                 const chatElement = document.createElement('openai-chatkit');
                 chatElement.id = 'chat';
 
-                // Try both attribute formats that ChatKit might expect
+                // Set client secret (try multiple formats)
                 chatElement.setAttribute('client-secret', clientSecret);
                 chatElement.setAttribute('clientSecret', clientSecret);
                 chatElement.clientSecret = clientSecret; // Also set as property
+
+                // Set public key (required for domain verification)
+                if (CHATKIT_PUBLIC_KEY && CHATKIT_PUBLIC_KEY !== 'YOUR_PUBLIC_KEY_HERE') {
+                    chatElement.setAttribute('public-key', CHATKIT_PUBLIC_KEY);
+                    chatElement.setAttribute('publicKey', CHATKIT_PUBLIC_KEY);
+                    chatElement.publicKey = CHATKIT_PUBLIC_KEY;
+                    console.log('[ChatKit] Public key configured');
+                } else {
+                    console.warn('[ChatKit] WARNING: No public key configured. Get it from OpenAI dashboard.');
+                }
 
                 chatWrapper.appendChild(chatElement);
 
