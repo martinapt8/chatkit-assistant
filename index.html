@@ -1,0 +1,256 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>A8 ChatKit Assistant</title>
+
+    <!-- ChatKit CDN -->
+    <script src="https://cdn.platform.openai.com/deployments/chatkit/chatkit.js"></script>
+
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Oxygen', 'Ubuntu', 'Cantarell', 'Fira Sans', 'Droid Sans', 'Helvetica Neue', sans-serif;
+            line-height: 1.6;
+            color: #333;
+            background-color: #000000;
+            position: relative;
+            overflow-x: hidden;
+            min-height: 100vh;
+        }
+
+        .container {
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 15px;
+        }
+
+        .header {
+            background: #000000;
+            color: white;
+            padding: 25px 20px;
+            border-radius: 12px;
+            margin-bottom: 20px;
+            text-align: center;
+            position: relative;
+        }
+
+        .logo {
+            max-width: 250px;
+            height: auto;
+            margin-bottom: 15px;
+        }
+
+        .header h1 {
+            font-size: 2rem;
+            margin-bottom: 8px;
+            font-weight: 700;
+        }
+
+        .header p {
+            font-size: 1rem;
+            opacity: 0.9;
+        }
+
+        /* ChatKit Container */
+        .chatkit-container {
+            background: white;
+            border-radius: 12px;
+            padding: 20px;
+            margin-bottom: 20px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+            min-height: 600px;
+        }
+
+        /* Loading state */
+        .loading {
+            text-align: center;
+            padding: 40px;
+            color: #666;
+        }
+
+        .loading-spinner {
+            display: inline-block;
+            width: 40px;
+            height: 40px;
+            border: 4px solid #f3f3f3;
+            border-top: 4px solid #FFD131;
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+            margin-bottom: 15px;
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
+        /* Error message */
+        .error-message {
+            background: #fff3cd;
+            border-left: 4px solid #ffc107;
+            padding: 15px 20px;
+            border-radius: 4px;
+            color: #856404;
+            margin-bottom: 15px;
+        }
+
+        .error-message strong {
+            display: block;
+            margin-bottom: 5px;
+        }
+
+        /* Footer */
+        .footer {
+            text-align: center;
+            padding: 20px;
+            color: #FFFFFF;
+            font-size: 0.85rem;
+        }
+
+        /* Mobile Responsive */
+        @media (max-width: 768px) {
+            .container {
+                padding: 15px;
+            }
+
+            .header h1 {
+                font-size: 1.5rem;
+            }
+
+            .chatkit-container {
+                padding: 15px;
+            }
+        }
+
+        /* ChatKit custom styling */
+        chatkit-chat {
+            display: block;
+            width: 100%;
+            min-height: 500px;
+        }
+    </style>
+</head>
+<body>
+
+    <div class="container">
+        <div class="header">
+            <img src="https://2739300.fs1.hubspotusercontent-na1.net/hubfs/2739300/HubSpot%20and%20GMail%20Signatures/A8%20Logo.png" alt="Aptitude 8 Logo" class="logo">
+            <h1>A8 ChatKit Assistant</h1>
+            <p>Powered by OpenAI Agent Builder & ChatKit</p>
+        </div>
+
+        <!-- ChatKit Container -->
+        <div class="chatkit-container">
+            <div id="loading" class="loading">
+                <div class="loading-spinner"></div>
+                <p>Initializing ChatKit session...</p>
+            </div>
+
+            <div id="error" class="error-message" style="display: none;">
+                <strong>Error</strong>
+                <p id="error-text"></p>
+            </div>
+
+            <!-- ChatKit web component will be inserted here -->
+            <div id="chat-wrapper"></div>
+        </div>
+
+        <div class="footer">
+            <p>Aptitude 8 | Powered by OpenAI ChatKit</p>
+        </div>
+    </div>
+
+    <script>
+        // Configuration - UPDATE THIS URL to your deployed Google Apps Script web app URL
+        const GAS_BACKEND_URL = 'YOUR_GOOGLE_APPS_SCRIPT_WEB_APP_URL_HERE';
+
+        // Initialize ChatKit
+        async function initializeChatKit() {
+            try {
+                console.log('[ChatKit] Fetching client secret from backend...');
+
+                // Call GAS backend to get client_secret
+                const response = await fetch(GAS_BACKEND_URL, {
+                    method: 'GET',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    }
+                });
+
+                if (!response.ok) {
+                    throw new Error(`Backend returned ${response.status}: ${response.statusText}`);
+                }
+
+                const data = await response.json();
+                console.log('[ChatKit] Received response from backend');
+
+                if (!data.success) {
+                    throw new Error(data.error || 'Failed to create ChatKit session');
+                }
+
+                const clientSecret = data.client_secret;
+                console.log('[ChatKit] Client secret received:', clientSecret.substring(0, 10) + '...');
+
+                // Hide loading
+                document.getElementById('loading').style.display = 'none';
+
+                // Create ChatKit chat element
+                const chatWrapper = document.getElementById('chat-wrapper');
+                const chatElement = document.createElement('chatkit-chat');
+                chatElement.id = 'chat';
+                chatElement.setAttribute('client-secret', clientSecret);
+
+                chatWrapper.appendChild(chatElement);
+
+                console.log('[ChatKit] Chat component initialized');
+
+            } catch (error) {
+                console.error('[ChatKit] Initialization error:', error);
+
+                // Hide loading
+                document.getElementById('loading').style.display = 'none';
+
+                // Show error
+                const errorDiv = document.getElementById('error');
+                const errorText = document.getElementById('error-text');
+                errorText.textContent = error.message || 'An unknown error occurred';
+                errorDiv.style.display = 'block';
+            }
+        }
+
+        // Wait for ChatKit script to load and DOM to be ready
+        window.addEventListener('DOMContentLoaded', () => {
+            console.log('[ChatKit] DOM ready, checking if ChatKit script loaded...');
+
+            // Check if ChatKit is available
+            if (typeof customElements !== 'undefined' && customElements.get('chatkit-chat')) {
+                console.log('[ChatKit] ChatKit web component is registered');
+                initializeChatKit();
+            } else {
+                // Wait a bit for the script to load
+                console.log('[ChatKit] Waiting for ChatKit to load...');
+                setTimeout(() => {
+                    if (typeof customElements !== 'undefined' && customElements.get('chatkit-chat')) {
+                        console.log('[ChatKit] ChatKit web component is now registered');
+                        initializeChatKit();
+                    } else {
+                        console.error('[ChatKit] ChatKit web component failed to load');
+                        document.getElementById('loading').style.display = 'none';
+                        const errorDiv = document.getElementById('error');
+                        const errorText = document.getElementById('error-text');
+                        errorText.textContent = 'ChatKit failed to load. Please refresh the page.';
+                        errorDiv.style.display = 'block';
+                    }
+                }, 2000);
+            }
+        });
+    </script>
+</body>
+</html>

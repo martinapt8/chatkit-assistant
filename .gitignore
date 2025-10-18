@@ -1,0 +1,14 @@
+# macOS
+.DS_Store
+
+# Google Apps Script files (deploy separately)
+*.gs
+
+# Documentation (internal only)
+CHATKIT_LESSONS_LEARNED.md
+DEPLOYMENT_GUIDE.md
+ChatKitDocs
+
+# Legacy files (not needed for GitHub Pages)
+A8ProjectSearch.html
+styles.html
