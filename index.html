@@ -6,7 +6,7 @@
     <title>A8 ChatKit Assistant</title>
 
     <!-- ChatKit CDN -->
-    <script src="https://cdn.platform.openai.com/deployments/chatkit/chatkit.js"></script>
+    <script src="https://cdn.platform.openai.com/deployments/chatkit/chatkit.js" async></script>
 
     <style>
         * {
@@ -130,7 +130,7 @@
         }
 
         /* ChatKit custom styling */
-        chatkit-chat {
+        openai-chatkit {
             display: block;
             width: 100%;
             min-height: 500px;
@@ -203,7 +203,7 @@
 
                 // Create ChatKit chat element
                 const chatWrapper = document.getElementById('chat-wrapper');
-                const chatElement = document.createElement('chatkit-chat');
+                const chatElement = document.createElement('openai-chatkit');
                 chatElement.id = 'chat';
                 chatElement.setAttribute('client-secret', clientSecret);
 
@@ -230,14 +230,14 @@
             console.log('[ChatKit] DOM ready, checking if ChatKit script loaded...');
 
             // Check if ChatKit is available
-            if (typeof customElements !== 'undefined' && customElements.get('chatkit-chat')) {
+            if (typeof customElements !== 'undefined' && customElements.get('openai-chatkit')) {
                 console.log('[ChatKit] ChatKit web component is registered');
                 initializeChatKit();
             } else {
-                // Wait a bit for the script to load
+                // Wait a bit for the script to load (async script may still be loading)
                 console.log('[ChatKit] Waiting for ChatKit to load...');
                 setTimeout(() => {
-                    if (typeof customElements !== 'undefined' && customElements.get('chatkit-chat')) {
+                    if (typeof customElements !== 'undefined' && customElements.get('openai-chatkit')) {
                         console.log('[ChatKit] ChatKit web component is now registered');
                         initializeChatKit();
                     } else {
@@ -248,7 +248,7 @@
                         errorText.textContent = 'ChatKit failed to load. Please refresh the page.';
                         errorDiv.style.display = 'block';
                     }
-                }, 2000);
+                }, 3000);
             }
         });
     </script>
