@@ -164,8 +164,8 @@
                 <p id="error-text"></p>
             </div>
 
-            <!-- ChatKit web component will be inserted here -->
-            <div id="chat-wrapper"></div>
+            <!-- ChatKit web component -->
+            <openai-chatkit id="my-chat"></openai-chatkit>
         </div>
 
         <div class="footer">
@@ -182,83 +182,72 @@
         // After adding your domain (martinapt8.github.io), OpenAI will give you a public key
         const CHATKIT_PUBLIC_KEY = 'domain_pk_68f3015dbb588190990ca2923ee7165504beacee6aa524a4'; // Replace with actual key from OpenAI dashboard
 
-        // Initialize ChatKit
+        // Initialize ChatKit using the official vanilla JS approach
         async function initializeChatKit() {
             try {
-                console.log('[ChatKit] Fetching client secret from backend...');
-
-                // Call GAS backend to get client_secret
-                // Using POST to avoid CORS preflight issues with GET
-                const response = await fetch(GAS_BACKEND_URL, {
-                    method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json'
-                    },
-                    body: JSON.stringify({})
-                });
-
-                if (!response.ok) {
-                    throw new Error(`Backend returned ${response.status}: ${response.statusText}`);
-                }
-
-                const data = await response.json();
-                console.log('[ChatKit] Received response from backend');
-
-                if (!data.success) {
-                    throw new Error(data.error || 'Failed to create ChatKit session');
-                }
-
-                const clientSecret = data.client_secret;
-                console.log('[ChatKit] Client secret received:', clientSecret.substring(0, 10) + '...');
+                console.log('[ChatKit] Initializing...');
 
                 // Hide loading
                 const loadingEl = document.getElementById('loading');
                 if (loadingEl) {
                     loadingEl.style.display = 'none';
-                    console.log('[ChatKit] Loading indicator hidden');
                 }
 
-                // Create ChatKit chat element
-                const chatWrapper = document.getElementById('chat-wrapper');
-                const chatElement = document.createElement('openai-chatkit');
-                chatElement.id = 'chat';
+                // Get the ChatKit element
+                const chatkit = document.getElementById('my-chat');
 
-                // Set client secret (try multiple formats)
-                chatElement.setAttribute('client-secret', clientSecret);
-                chatElement.setAttribute('clientSecret', clientSecret);
-                chatElement.clientSecret = clientSecret; // Also set as property
-
-                // Set public key (required for domain verification)
-                if (CHATKIT_PUBLIC_KEY && CHATKIT_PUBLIC_KEY !== 'YOUR_PUBLIC_KEY_HERE') {
-                    chatElement.setAttribute('public-key', CHATKIT_PUBLIC_KEY);
-                    chatElement.setAttribute('publicKey', CHATKIT_PUBLIC_KEY);
-                    chatElement.publicKey = CHATKIT_PUBLIC_KEY;
-                    console.log('[ChatKit] Public key configured');
-                } else {
-                    console.warn('[ChatKit] WARNING: No public key configured. Get it from OpenAI dashboard.');
+                if (!chatkit) {
+                    throw new Error('ChatKit element not found');
                 }
 
-                chatWrapper.appendChild(chatElement);
+                console.log('[ChatKit] Configuring with setOptions...');
 
-                console.log('[ChatKit] Chat component initialized');
-                console.log('[ChatKit] Chat element:', chatElement);
+                // Configure ChatKit using the official API
+                chatkit.setOptions({
+                    api: {
+                        async getClientSecret(currentClientSecret) {
+                            console.log('[ChatKit] getClientSecret called, current:', currentClientSecret ? 'exists' : 'none');
 
-                // Debug: check if element is in DOM
-                setTimeout(() => {
-                    const mounted = document.getElementById('chat');
-                    console.log('[ChatKit] Element in DOM:', mounted);
-                    console.log('[ChatKit] Element dimensions:', {
-                        width: mounted?.offsetWidth,
-                        height: mounted?.offsetHeight,
-                        display: window.getComputedStyle(mounted || {}).display
-                    });
-                }, 1000);
+                            // If we don't have a secret or need to refresh
+                            if (!currentClientSecret) {
+                                console.log('[ChatKit] Fetching new client secret from backend...');
+
+                                const res = await fetch(GAS_BACKEND_URL, {
+                                    method: 'POST',
+                                    headers: {
+                                        'Content-Type': 'application/json',
+                                    },
+                                });
+
+                                if (!res.ok) {
+                                    throw new Error(`Backend returned ${res.status}: ${res.statusText}`);
+                                }
+
+                                const data = await res.json();
+
+                                if (!data.success) {
+                                    throw new Error(data.error || 'Failed to create ChatKit session');
+                                }
+
+                                console.log('[ChatKit] Client secret received:', data.client_secret.substring(0, 10) + '...');
+                                return data.client_secret;
+                            }
+
+                            // For refresh, just return the current one
+                            // In production, you'd call a refresh endpoint here
+                            return currentClientSecret;
+                        }
+                    },
+                });
+
+                console.log('[ChatKit] Initialized successfully');
 
             } catch (error) {
                 console.error('[ChatKit] Initialization error:', error);
 
                 // Hide loading
-                document.getElementById('loading').style.display = 'none';
+                const loadingEl = document.getElementById('loading');
+                if (loadingEl) loadingEl.style.display = 'none';
 
                 // Show error
                 const errorDiv = document.getElementById('error');
