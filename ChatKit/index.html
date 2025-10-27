@@ -1,0 +1,290 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>A8 ChatKit Assistant</title>
+
+    <!-- ChatKit CDN -->
+    <script src="https://cdn.platform.openai.com/deployments/chatkit/chatkit.js" async></script>
+
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Oxygen', 'Ubuntu', 'Cantarell', 'Fira Sans', 'Droid Sans', 'Helvetica Neue', sans-serif;
+            line-height: 1.6;
+            color: #333;
+            background-color: #000000;
+            position: relative;
+            overflow-x: hidden;
+            min-height: 100vh;
+        }
+
+        .container {
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 15px;
+        }
+
+        .header {
+            background: #000000;
+            color: white;
+            padding: 25px 20px;
+            border-radius: 12px;
+            margin-bottom: 20px;
+            text-align: center;
+            position: relative;
+        }
+
+        .logo {
+            max-width: 250px;
+            height: auto;
+            margin-bottom: 15px;
+        }
+
+        .header h1 {
+            font-size: 2rem;
+            margin-bottom: 8px;
+            font-weight: 700;
+        }
+
+        .header p {
+            font-size: 1rem;
+            opacity: 0.9;
+        }
+
+        /* ChatKit Container */
+        .chatkit-container {
+            background: white;
+            border-radius: 12px;
+            padding: 20px;
+            margin-bottom: 20px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+            min-height: 600px;
+        }
+
+        /* Loading state */
+        .loading {
+            text-align: center;
+            padding: 40px;
+            color: #666;
+        }
+
+        .loading-spinner {
+            display: inline-block;
+            width: 40px;
+            height: 40px;
+            border: 4px solid #f3f3f3;
+            border-top: 4px solid #FFD131;
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+            margin-bottom: 15px;
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
+        /* Error message */
+        .error-message {
+            background: #fff3cd;
+            border-left: 4px solid #ffc107;
+            padding: 15px 20px;
+            border-radius: 4px;
+            color: #856404;
+            margin-bottom: 15px;
+        }
+
+        .error-message strong {
+            display: block;
+            margin-bottom: 5px;
+        }
+
+        /* Footer */
+        .footer {
+            text-align: center;
+            padding: 20px;
+            color: #FFFFFF;
+            font-size: 0.85rem;
+        }
+
+        /* Mobile Responsive */
+        @media (max-width: 768px) {
+            .container {
+                padding: 15px;
+            }
+
+            .header h1 {
+                font-size: 1.5rem;
+            }
+
+            .chatkit-container {
+                padding: 15px;
+            }
+        }
+
+        /* ChatKit custom styling */
+        openai-chatkit {
+            display: block !important;
+            width: 100% !important;
+            min-height: 600px !important;
+            height: 600px !important;
+        }
+
+        #chat-wrapper {
+            width: 100%;
+            min-height: 600px;
+        }
+    </style>
+</head>
+<body>
+
+    <div class="container">
+        <div class="header">
+            <img src="https://2739300.fs1.hubspotusercontent-na1.net/hubfs/2739300/HubSpot%20and%20GMail%20Signatures/A8%20Logo.png" alt="Aptitude 8 Logo" class="logo">
+            <h1>A8 ChatKit Assistant</h1>
+            <p>Powered by OpenAI Agent Builder & ChatKit</p>
+        </div>
+
+        <!-- ChatKit Container -->
+        <div class="chatkit-container">
+            <div id="loading" class="loading">
+                <div class="loading-spinner"></div>
+                <p>Initializing ChatKit session...</p>
+            </div>
+
+            <div id="error" class="error-message" style="display: none;">
+                <strong>Error</strong>
+                <p id="error-text"></p>
+            </div>
+
+            <!-- ChatKit web component -->
+            <openai-chatkit id="my-chat"></openai-chatkit>
+        </div>
+
+        <div class="footer">
+            <p>Aptitude 8 | Powered by OpenAI ChatKit</p>
+        </div>
+    </div>
+
+    <script>
+        // Configuration
+        const GAS_BACKEND_URL = 'https://chatkit-assistant.vercel.app/api/session';
+
+        // ADD YOUR PUBLIC KEY FROM OPENAI DASHBOARD HERE
+        // Get this from: https://platform.openai.com/settings/organization/chatkit
+        // After adding your domain (martinapt8.github.io), OpenAI will give you a public key
+        const CHATKIT_PUBLIC_KEY = 'domain_pk_68f3015dbb588190990ca2923ee7165504beacee6aa524a4'; // Replace with actual key from OpenAI dashboard
+
+        // Initialize ChatKit using the official vanilla JS approach
+        async function initializeChatKit() {
+            try {
+                console.log('[ChatKit] Initializing...');
+
+                // Hide loading
+                const loadingEl = document.getElementById('loading');
+                if (loadingEl) {
+                    loadingEl.style.display = 'none';
+                }
+
+                // Get the ChatKit element
+                const chatkit = document.getElementById('my-chat');
+
+                if (!chatkit) {
+                    throw new Error('ChatKit element not found');
+                }
+
+                console.log('[ChatKit] Configuring with setOptions...');
+
+                // Configure ChatKit using the official API
+                chatkit.setOptions({
+                    api: {
+                        async getClientSecret(currentClientSecret) {
+                            console.log('[ChatKit] getClientSecret called, current:', currentClientSecret ? 'exists' : 'none');
+
+                            // If we don't have a secret or need to refresh
+                            if (!currentClientSecret) {
+                                console.log('[ChatKit] Fetching new client secret from backend...');
+
+                                const res = await fetch(GAS_BACKEND_URL, {
+                                    method: 'POST',
+                                    headers: {
+                                        'Content-Type': 'application/json',
+                                    },
+                                });
+
+                                if (!res.ok) {
+                                    throw new Error(`Backend returned ${res.status}: ${res.statusText}`);
+                                }
+
+                                const data = await res.json();
+
+                                if (!data.success) {
+                                    throw new Error(data.error || 'Failed to create ChatKit session');
+                                }
+
+                                console.log('[ChatKit] Client secret received:', data.client_secret.substring(0, 10) + '...');
+                                return data.client_secret;
+                            }
+
+                            // For refresh, just return the current one
+                            // In production, you'd call a refresh endpoint here
+                            return currentClientSecret;
+                        }
+                    },
+                    // Enable file uploads
+                    allowFileUploads: true,
+                });
+
+                console.log('[ChatKit] Initialized successfully');
+
+            } catch (error) {
+                console.error('[ChatKit] Initialization error:', error);
+
+                // Hide loading
+                const loadingEl = document.getElementById('loading');
+                if (loadingEl) loadingEl.style.display = 'none';
+
+                // Show error
+                const errorDiv = document.getElementById('error');
+                const errorText = document.getElementById('error-text');
+                errorText.textContent = error.message || 'An unknown error occurred';
+                errorDiv.style.display = 'block';
+            }
+        }
+
+        // Wait for ChatKit script to load and DOM to be ready
+        window.addEventListener('DOMContentLoaded', () => {
+            console.log('[ChatKit] DOM ready, checking if ChatKit script loaded...');
+
+            // Check if ChatKit is available
+            if (typeof customElements !== 'undefined' && customElements.get('openai-chatkit')) {
+                console.log('[ChatKit] ChatKit web component is registered');
+                initializeChatKit();
+            } else {
+                // Wait a bit for the script to load (async script may still be loading)
+                console.log('[ChatKit] Waiting for ChatKit to load...');
+                setTimeout(() => {
+                    if (typeof customElements !== 'undefined' && customElements.get('openai-chatkit')) {
+                        console.log('[ChatKit] ChatKit web component is now registered');
+                        initializeChatKit();
+                    } else {
+                        console.error('[ChatKit] ChatKit web component failed to load');
+                        document.getElementById('loading').style.display = 'none';
+                        const errorDiv = document.getElementById('error');
+                        const errorText = document.getElementById('error-text');
+                        errorText.textContent = 'ChatKit failed to load. Please refresh the page.';
+                        errorDiv.style.display = 'block';
+                    }
+                }, 3000);
+            }
+        });
+    </script>
+</body>
+</html>
