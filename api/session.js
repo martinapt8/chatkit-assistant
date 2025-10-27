@@ -42,7 +42,12 @@ export default async function handler(req, res) {
         workflow: {
           id: workflowId
         },
-        user: `user-${Date.now()}-${Math.random().toString(36).substring(7)}`
+        user: `user-${Date.now()}-${Math.random().toString(36).substring(7)}`,
+        chatkit_configuration: {
+          file_upload: {
+            enabled: true
+          }
+        }
       })
     });
 

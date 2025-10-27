@@ -204,7 +204,6 @@
 
                 // Configure ChatKit using the official API
                 chatkit.setOptions({
-                    publicKey: CHATKIT_PUBLIC_KEY,
                     api: {
                         async getClientSecret(currentClientSecret) {
                             console.log('[ChatKit] getClientSecret called, current:', currentClientSecret ? 'exists' : 'none');
@@ -239,8 +238,6 @@
                             return currentClientSecret;
                         }
                     },
-                    // Enable file uploads
-                    allowFileUploads: true,
                 });
 
                 console.log('[ChatKit] Initialized successfully');
