@@ -49,6 +49,7 @@ Agent Builder Workflow
 - Proper CORS handling
 - Domain whitelisting configured
 - Error handling and logging
+- File upload support enabled server-side
 
 ✅ **Scalable**
 - Serverless architecture
@@ -241,6 +242,18 @@ Customize your agent in [Agent Builder](https://platform.openai.com/agent-builde
 - ✅ Ensure backend has CORS headers
 - ❌ Google Apps Script has CORS issues (use Vercel instead)
 
+### File uploads not working
+
+**Server-side configuration required:**
+- File uploads must be enabled in the backend session creation, not client-side
+- Add `chatkit_configuration.file_upload.enabled = true` to your session API call (see `api/session.js:46-49`)
+- **Important:** Invalid options like `publicKey` or `allowFileUploads` in front-end `setOptions()` will cause fatal errors
+- File uploads also require your Agent Builder workflow to be configured to accept file attachments
+
+**Agent Builder configuration:**
+- In your Agent Builder workflow settings, ensure file handling is enabled
+- Check that your agent has the appropriate tools/capabilities for processing uploaded files
+
 ### More issues?
 
 See [CHATKIT_IMPLEMENTATION_GUIDE.md](CHATKIT_IMPLEMENTATION_GUIDE.md) - Troubleshooting section
@@ -282,6 +295,12 @@ MIT License - Feel free to use for your projects
 **Built by**: Aptitude 8
 **Date**: October 2025
 **Status**: Production Ready ✅
+
+### Recent Updates (October 28, 2025)
+- Added server-side file upload configuration to enable drag-and-drop functionality
+- Fixed ChatKit initialization issues by removing invalid front-end configuration options
+- Improved troubleshooting documentation for file upload setup
+- Clarified that file uploads require both backend and Agent Builder workflow configuration
 
 ---
 
